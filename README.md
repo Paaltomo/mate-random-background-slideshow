@@ -6,11 +6,31 @@ This (clunky) fix was reached after tweaking [this](https://ubuntuforums.org/sho
 ## Usage
 Tested in Debian only.
 
-1. Add randombg.sh to a preferred location (i.e. ~/.scripts/)
+1. Add script to a preferred location (i.e. ~/.scripts/wallpaper.sh)
 2. Change the background folder to your wallpapers directory, if different than /usr/share/backgrounds
 3. Add the following to a new cronjob in /etc/cron.d/ - remember to replace 'user' with your username
 ```
 # Wallpaper slideshow
-*/5 * * * * user /bin/bash /home/user/.scripts/randombg.sh
+*/5 * * * * user /bin/bash /home/user/.scripts/wallpaper.sh
 ```
 4. Reload cron and enjoy.
+## Script
+```
+#!/bin/bash
+
+# Set your folder with the backgrounds
+bgfolder="/usr/share/backgrounds/"
+
+# export x-session environment variable
+PID=$(pgrep -o x-session)
+export DBUS_SESSION_BUS_ADDRESS=$(grep -z DBUS_SESSION_BUS_ADDRESS /proc/$PID/environ|cut -d= -f2-)
+
+# Go to your folder with the backgrounds
+cd "$bgfolder"
+
+# Get the name of a random file
+randomfile=`ls *.jpg *.png | sed -n $((RANDOM%$(ls *.jpg *.png |wc -l)+1))p`
+
+# Use gsettings command to set the desktop variable
+gsettings set org.mate.background picture-filename "$bgfolder$randomfile"
+```
